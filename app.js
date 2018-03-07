@@ -27,7 +27,11 @@ passport.use(new FacebookStrategy(facebook,
       done(null, transformFacebookProfile(profile._json))
     }
 ))
+
+// Serialize user into the sessions
 passport.serializeUser((user, done) => done(null, user))
+
+// Deserialize user from the sessions
 passport.deserializeUser((user, done) => done(null, user))
 
 app.use(passport.initialize())
@@ -42,9 +46,9 @@ app.get('/', function (req, res) {
 
 app.get('/auth/facebook/callback',
     passport.authenticate('facebook', { failureRedirect: '/auth/facebook' }),
+    // Redirect user back to the mobile app using Linking with a custom protocol OAuthLogin
     (req, res) => {
-      io.emit('login', req.user)
-      res.send()
+      res.redirect('OAuthLogin://login?user=' + JSON.stringify(req.user))
     })
 
 io.on('connection', function (socket) {
