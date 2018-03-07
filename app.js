@@ -6,6 +6,9 @@ const config = require('./config')
 const MessageModel = require('./message/model')
 const message = require('./message/message')
 const user = require('./user/user')
+const passport = require('passport')
+const FacebookStrategy = require('passport-facebook')
+const facebook = config.facebook
 
 require('./db')
 
@@ -13,6 +16,26 @@ http.listen(config.port, () => {
   console.log(`Server running at port: ${config.port}`)
 })
 
+const transformFacebookProfile = (profile) => ({
+  name: profile.name,
+  avatar: profile.picture.data.url
+})
+
+passport.use(new FacebookStrategy(facebook,
+    // Gets called when user authorizes access to their profile
+    async function (accessToken, refreshToken, profile, done) {
+      done(null, transformFacebookProfile(profile._json))
+    }
+))
+
+// Serialize user into the sessions
+passport.serializeUser((user, done) => done(null, user))
+
+// Deserialize user from the sessions
+passport.deserializeUser((user, done) => done(null, user))
+
+app.use(passport.initialize())
+app.use(passport.session())
 app.use(bodyParser.json())
 app.use('/api', message)
 app.use('/api', user)
@@ -20,6 +43,14 @@ app.use('/api', user)
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html')
 })
+
+app.get('/auth/facebook/callback',
+    passport.authenticate('facebook', { failureRedirect: '/auth/facebook' }),
+    // Redirect user back to the mobile app using Linking with a custom protocol OAuthLogin
+    (req, res) => {
+      console.log(123123123)
+      res.redirect('ChatApp://login?user=' + JSON.stringify(req.user))
+    })
 
 io.on('connection', function (socket) {
   console.log('a user connected')
