@@ -5,6 +5,7 @@ const io = require('socket.io')(http)
 const config = require('./config')
 const MessageModel = require('./message/model')
 const message = require('./message/message')
+const user = require('./user/user')
 
 require('./db')
 
@@ -14,6 +15,7 @@ http.listen(config.port, () => {
 
 app.use(bodyParser.json())
 app.use('/api', message)
+app.use('/api', user)
 
 app.get('/', function (req, res) {
   res.sendFile(__dirname + '/index.html')
