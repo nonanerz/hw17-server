@@ -44,6 +44,7 @@ app.get('/auth/facebook/callback',
     passport.authenticate('facebook', { failureRedirect: '/auth/facebook' }),
     (req, res) => {
       io.emit('login', req.user)
+      res.send()
     })
 
 io.on('connection', function (socket) {
